@@ -1,7 +1,5 @@
-import random
-import base64
 import hashlib
-from rsa import *
+import os
 
 def mgf1(seed: bytes, length: int, hash_function=hashlib.sha3_256):
     """Implementado em https://en.wikipedia.org/wiki/Mask_generation_function"""
@@ -10,7 +8,7 @@ def mgf1(seed: bytes, length: int, hash_function=hashlib.sha3_256):
         raise ValueError("mask too long")
     mask = b""
     counter = 0
-    while len(mask) < length:
+    while len(mask) < length: 
         C = int.to_bytes(counter, 4, 'big')
         mask += hash_function(seed + C).digest()
         counter += 1
@@ -28,7 +26,6 @@ def xor(data: bytes, mask: bytes):
     return result
 
 def oaep_encode(msg: bytes, k: int, label = b""):
-    print(msg)
     # Hash da label
     lhash = hashlib.sha3_256(label).digest()
 
@@ -87,43 +84,18 @@ def oaep_decode(em: bytes, k: int, label = b""):
     if lhash != lhash2:
         raise ValueError("Hashes don't match")
     
-    print(zero_pad_msg)
-    
-    for i in range(0, len(zero_pad_msg), 2):
-        if zero_pad_msg[i : i + 1] == b'\x00':
-            break
-        msg = zero_pad_msg[:i + 1]
-    
-    
+    for i in range(0, len(zero_pad_msg)):
+        if zero_pad_msg[i] == 0:
+            # teste se padding = 0
+            continue
+        if zero_pad_msg[i] == 1:
+            # teste do byte 1
+            return zero_pad_msg[i + 1:]
+            
     # if zero_pad_msg[i - 1] != b'\x01':
     #     raise ValueError("Invalid Padding")
     
     # for j in range(len(zero_pad_msg) - len(msg)):
     #     if zero_pad_msg[j+1] != b'\x00':
     #         raise ValueError("Invalid Padding")
-    print(msg)
-    return msg
-
-
-key = b'string of some more than 16 bytes'
-# data = b'sample message for testing'
-data = b'outra mensagem de teste com tamanho maior'
-result_enc = encrypt(key, data) # bytes
-rsa_keys = rsa_gen_keys()
-rsa_enc = rsa_encrypt(rsa_keys[0], result_enc) # int
-rsa_dec = rsa_decrypt(rsa_keys[1], rsa_enc)
-
-# AES => bytes => bytes => RSA => bytes => int => OAEP
-# => int => bytes => RSA => bytes => bytes => AES
-
-rsa_enc_bytes = rsa_enc.to_bytes(1024, 'little')
-oaep_encoded = oaep_encode(rsa_enc_bytes, 1024) # bytes
-
-oaep_decoded = oaep_decode(oaep_encoded, 1024) # bytes
-
-aux = int.from_bytes(oaep_decoded, 'little')
-rsa_dec2 = rsa_decrypt(rsa_keys[1], aux) # int
-
-aux2 = rsa_dec2.to_bytes(1024, 'little')
-aes_dec = decrypt(key, aux2) # bytes
-print(aes_dec) 
+    

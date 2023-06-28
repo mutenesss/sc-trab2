@@ -247,12 +247,16 @@ def return_data(x):
         for column in range(4):
             for row in range(4):
                 data.append(a[row][column])
-    return bytes(data)
+    
+    i = len(data) - 1
+    while data[i] == 0:
+        i -= 1
+    return bytes(data[:i+1])
 
-if __name__ == '__main__':
-    key = b'string of some more than 16 bytes'
-    data = b'sample message for testing'
-    result_enc = encrypt(key, data)
-    print(result_enc)
-    result_dec = decrypt(key, result_enc)
-    print(result_dec)
+
+# key = b'string of some more than 16 bytes'
+# data = b'sample message for testing'
+# result_enc = encrypt(key, data)
+# print(result_enc)
+# result_dec = decrypt(key, result_enc)
+# print(result_dec)

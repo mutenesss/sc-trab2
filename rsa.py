@@ -1,8 +1,5 @@
 import random
-import base64
-import hashlib
-import os
-from aes import *
+
 
 def gcm(a, b):
     # MDC = Máximo Divisor Comum
