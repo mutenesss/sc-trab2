@@ -249,14 +249,10 @@ def return_data(x):
                 data.append(a[row][column])
     return bytes(data)
 
-def main():
+if __name__ == '__main__':
     key = b'string of some more than 16 bytes'
     data = b'sample message for testing'
     result_enc = encrypt(key, data)
     print(result_enc)
     result_dec = decrypt(key, result_enc)
     print(result_dec)
-    
-
-if __name__ == "__main__":
-    main()

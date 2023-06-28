@@ -2,6 +2,7 @@ import random
 import base64
 import hashlib
 import os
+from aes import *
 
 def gcm(a, b):
     # MDC = Máximo Divisor Comum
@@ -90,99 +91,29 @@ def rsa_decrypt(key, message):
     d, n = key
     return pow(message, d, n) # returns int
 
-""" Adição funções OAEP """
-
-def mgf1(seed: bytes, length: int, hash_function=hashlib.sha3_256):
-    """Implementado em https://en.wikipedia.org/wiki/Mask_generation_function"""
-    hLen = hash_function().digest_size
-    # https://www.ietf.org/rfc/rfc2437.txt
-    # 1.If l > 2^32(hLen), output "mask too long" and stop.
-    if length > (hLen << 32):
-        raise ValueError("mask too long")
-    # 2.Let T  be the empty octet string.
-    T = b""
-    # 3.For counter from 0 to \lceil{l / hLen}\rceil-1, do the following:
-    # Note: \lceil{l / hLen}\rceil-1 is the number of iterations needed,
-    #       but it's easier to check if we have reached the desired length.
-    counter = 0
-    while len(T) < length:
-        # a.Convert counter to an octet string C of length 4 with the primitive I2OSP: C = I2OSP (counter, 4)
-        C = int.to_bytes(counter, 4, 'big')
-        # b.Concatenate the hash of the seed Z and C to the octet string T: T = T || Hash (Z || C)
-        T += hash_function(seed + C).digest()
-        counter += 1
-    # 4.Output the leading l octets of T as the octet string mask.
-    return T[:length]
-
-def xor(data: bytes, mask: bytes):
-    result = b""
-    for i in range(max(len(data), len(mask))):
-        if i < len(data) and i < len(mask):
-            result += bytes([data[i] ^ mask[i]])
-        elif i < len(data):
-            result += bytes(data[i])
-        else:
-            break
-    return result
-
-def oaep_encode(msg: bytes, k: int, label = b""):
-    msg_size = len(msg)
-    lhash = hashlib.sha3_256(label).digest()
-    hash_size = len(lhash)
-    ps = b"\x00" * (k - msg_size - 2 * hash_size - 2)
-    db = lhash + ps + b"\x01" + msg
-    seed = os.urandom(hash_size)
-    db_mask = mgf1(seed, k - hash_size - 1)
-    masked_db = xor(db, db_mask)
-    seed_mask = mgf1(masked_db, hash_size)
-    masked_seed = xor(seed, seed_mask)
-    em = b"\x00" + masked_seed + masked_db
-    return em
-
-def oaep_decode(em: bytes, k: int, label = b""):
-    lhash = hashlib.sha3_256(label).digest()
-    em = em.to_bytes(k, 'big')
-    # em_len = len(em)
-    hash_size = len(lhash)
-
-    _, masked_seed, masked_db = em[:1], em[1:hash_size + 1], em[hash_size + 1:]
-    seed_mask = mgf1(masked_db, hash_size)
-    seed = xor(masked_seed, seed_mask)
-    db_mask = mgf1(seed, k - hash_size - 1)
-    db = xor(masked_db, db_mask)
-    i = hash_size
-    
-    while i < len(db):
-        if db[i] == 1:
-            i += 1
-            continue
-        elif db[i] == 1:
-            i += 1
-            break
-    
-    msg = db[i:]
-    return msg
-
-def rsa_encrypt_oaep(key, message):
-    # Criptografa a mensagem com a chave pública
-    e, n = key
-    aux = n.bit_length() // 8
-    return rsa_encrypt(key, oaep_encode(message, aux))
-
-def rsa_decrypt_oaep(key, message):
-    # Descriptografa a mensagem com a chave privada
-    d, n = key
-    aux = n.bit_length() // 8
-    return oaep_decode(rsa_decrypt(key, message), aux)
-
 
 if __name__ == "__main__":
-    # Teste
-    # key = rsa_gen_keys()
-    # print(key)
-    # message = b'teste'
-    # print(message)
-    # encrypted = rsa_encrypt_oaep(key[0], message)
-    # print(encrypted)
-    # decrypted = rsa_decrypt_oaep(key[1], encrypted)
-    # print(decrypted)
+    """ Passagem AES => RSA => AES 
+    - Key:  bytes 
+    - Data: bytes 
+    - encrypt AES => in : bytes => out : bytes
+    - encrypt RSA => in : bytes => out : int
+    - decrypt RSA => in : int => out : int *Necessario conversao para bytes 
+    - decrypt AES => in : bytes => out : bytes
+
+    - Após todos os passos, a mensagem é recuperada com multiplos bytes de lixo no final 
+    """
+    key = b'string of some more than 16 bytes'
+    # data = b'sample message for testing'
+    data = b'outra mensagem de teste com tamanho maior'
+    result_enc = encrypt(key, data)
+    rsa_keys = rsa_gen_keys()
+    rsa_enc = rsa_encrypt(rsa_keys[0], result_enc)
+    rsa_dec = rsa_decrypt(rsa_keys[1], rsa_enc)
+    a = rsa_dec.to_bytes(256, 'big')
+    result_dec = decrypt(key, a)
+    print(  f'mensagem: {data}\n'
+            f'AES enc: {result_enc}\n'
+            f'RSA enc: {rsa_enc}\n'
+            f'RSA dec: {rsa_dec}\n'
+            f'AES dec: {result_dec}')
