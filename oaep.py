@@ -3,11 +3,12 @@ import os
 
 def mgf1(seed: bytes, length: int, hash_function=hashlib.sha3_256):
     """Implementado em https://en.wikipedia.org/wiki/Mask_generation_function"""
-    hLen = hash_function().digest_size
+    hLen = hash_function().digest_size  # Tamanho do hash em bytes
     if length > (hLen << 32):
+        # Não deixa a mascara ser maior que 2^32 
         raise ValueError("mask too long")
     mask = b""
-    counter = 0
+    counter = 0 # Vai de 0 a ceil(length / hLen) - 1
     while len(mask) < length: 
         C = int.to_bytes(counter, 4, 'big')
         mask += hash_function(seed + C).digest()
@@ -90,12 +91,4 @@ def oaep_decode(em: bytes, k: int, label = b""):
             continue
         if zero_pad_msg[i] == 1:
             # teste do byte 1
-            return zero_pad_msg[i + 1:]
-            
-    # if zero_pad_msg[i - 1] != b'\x01':
-    #     raise ValueError("Invalid Padding")
-    
-    # for j in range(len(zero_pad_msg) - len(msg)):
-    #     if zero_pad_msg[j+1] != b'\x00':
-    #         raise ValueError("Invalid Padding")
-    
+            return zero_pad_msg[i + 1:] # Retorna a mensagem sem o padding e o byte 1

@@ -1,6 +1,5 @@
 import random
 
-
 def gcm(a, b):
     # MDC = Máximo Divisor Comum
     while b:
