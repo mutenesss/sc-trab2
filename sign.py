@@ -5,7 +5,7 @@ from rsa import rsa_encrypt, rsa_decrypt
 def sign(msg: bytes, keys):
     # Hash da mensagem inicial
     hash = hashlib.sha3_256(msg).digest()
-    sig = rsa_encrypt(keys[0], hash)
+    sig = rsa_encrypt(keys[0], hash)    # Usa chave publica para assinatura
     # Assina mensagem e faz encode para base64
     sig = base64.b64encode(sig.to_bytes(256, 'big'))
     return sig
@@ -17,7 +17,7 @@ def verify(msg: bytes, sig: bytes, keys):
     sig = base64.b64decode(sig)
     sig = int.from_bytes(sig, 'big')
     # Calcula hash da assinatura
-    hash_sig = rsa_decrypt(keys[1], sig).to_bytes(256, 'big')
+    hash_sig = rsa_decrypt(keys[1], sig).to_bytes(256, 'big')   # Usa chave privada para verificar assinatura
     # Remove padding da hash_sig calculada
     for i in range(0, len(hash_sig)):
         if hash_sig[i] != 0:

@@ -86,30 +86,3 @@ def rsa_decrypt(key, message):
     # Descriptografa a mensagem com a chave privada
     d, n = key
     return pow(message, d, n) # returns int
-
-
-if __name__ == "__main__":
-    """ Passagem AES => RSA => AES 
-    - Key:  bytes 
-    - Data: bytes 
-    - encrypt AES => in : bytes => out : bytes
-    - encrypt RSA => in : bytes => out : int
-    - decrypt RSA => in : int => out : int *Necessario conversao para bytes 
-    - decrypt AES => in : bytes => out : bytes
-
-    - Após todos os passos, a mensagem é recuperada com multiplos bytes de lixo no final 
-    """
-    key = b'string of some more than 16 bytes'
-    # data = b'sample message for testing'
-    data = b'outra mensagem de teste com tamanho maior'
-    result_enc = encrypt(key, data)
-    rsa_keys = rsa_gen_keys()
-    rsa_enc = rsa_encrypt(rsa_keys[0], result_enc)
-    rsa_dec = rsa_decrypt(rsa_keys[1], rsa_enc)
-    a = rsa_dec.to_bytes(256, 'big')
-    result_dec = decrypt(key, a)
-    print(  f'mensagem: {data}\n'
-            f'AES enc: {result_enc}\n'
-            f'RSA enc: {rsa_enc}\n'
-            f'RSA dec: {rsa_dec}\n'
-            f'AES dec: {result_dec}')

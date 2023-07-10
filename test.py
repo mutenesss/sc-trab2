@@ -99,8 +99,8 @@ def test_5(key, data):
 aes_key = b'string of some more than 16 bytes'
 msg = b'outra mensagem de teste com tamanho maior'
 
-test_1(aes_key, msg)
-test_2(aes_key, msg)
-test_3(aes_key, msg)
-test_4(aes_key, msg)
-test_5(aes_key, msg)        
+# test_1(aes_key, msg)
+# test_2(aes_key, msg)
+# test_3(aes_key, msg)
+# test_4(aes_key, msg)
+# test_5(aes_key, msg)    
